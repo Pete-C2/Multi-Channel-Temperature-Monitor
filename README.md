@@ -7,12 +7,14 @@ Requires:
   - sudo apt-get install python3-flask
 - A [Raspberry Pi](http://www.raspberrypi.org/).
 - Hardware with [MAX31855 temperature monitors](https://www.maximintegrated.com/en/products/analog/sensors-and-sensor-interface/MAX31855.html):
-  - Design currently fixed to two ICs
-  - SPI Data (SO) on Raspberry Pi header pin 7
-  - SPI Clock (SCLK) on Raspberry Pi header pin 11
-  - SPI CS for each channel on Raspberry Pi header pins:
-    - Channel 1 - pin 3
-    - Channel 2 - pin 5
+  - Design updated for flexible number of sensors
+
+Installation:
+- Copy files to a folder on the Raspberry Pi
+- Edit /etc/rc.local to autorun application:
+   - sudo nano /etc/rc.local
+   - Add: python /home/pi/.../web.py where ... is the location of your file
+- Edit config.xml to define system
     
 Recommendations (to make life easier):
 - Set a [static IP address](https://www.modmypi.com/blog/tutorial-how-to-give-your-raspberry-pi-a-static-ip-address)
@@ -27,6 +29,10 @@ Click on:
 - Shutdown to turn the Raspberry Pi off from the web browser.
 
 ## Changelog
+
+### V0.2
+Added config.xml to define the configuration.
+Supports arbitrary number of channels.
 
 ### V0.1
 Initial trial code.
