@@ -2,8 +2,42 @@ from flask import Flask, render_template
 import datetime
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
+
+# Read config from xml file
+
+tree = ET.parse('config.xml')
+root = tree.getroot()
+HW = root.find('HARDWARE')
+sensors = root.find('SENSORS')
+display = root.find('DISPLAY')
+
+# Read hardware
+# Clock
+CLK = HW.find('CLOCK')
+clock_pin = int(CLK.find('PIN').text)
+# Data
+DATA = HW.find('DATA')
+data_pin = int(DATA.find('PIN').text)
+# Chip Selects
+cs_pins = []
+for child in sensors:
+     cs_pins.append(int(child.find('CSPIN').text))
+
+# Read display settings
+units = display.find('UNITS').text.lower()
+channel_names = []
+for child in sensors:
+     channel_names.append(child.find('NAME').text)
+     
+# Create a dictionary called temps to store the temperatures and names:
+temps = {}
+channel = 1
+for child in sensors:
+     temps[channel] = {'name' : child.find('NAME').text, 'temp' : ''}
+     channel = channel + 1
 
 @app.route('/')
 def index():
@@ -19,16 +53,8 @@ def temp():
    now = datetime.datetime.now()
    timeString = now.strftime("%H:%M on %d-%m-%Y")
 
-   cs_pins = [3, 5]
-   clock_pin = 11
-   data_pin = 7
-   units = "c"
    thermocouples = []
-   # Create a dictionary called temps to store the temperatures and names:
-   temps = {
-      1 : {'name' : 'Channel 1', 'temp' : ''},
-      2 : {'name' : 'Channel 2', 'temp' : ''}
-      }
+
    channel = 1
    for cs_pin in cs_pins:
        thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
@@ -51,7 +77,8 @@ def temp():
    templateData = {
       'time': timeString,
       'air' : air_temp,
-      'temps' : temps
+      'temps' : temps,
+      'units' : units.upper()
       }
 
    return render_template('oven.html', **templateData)

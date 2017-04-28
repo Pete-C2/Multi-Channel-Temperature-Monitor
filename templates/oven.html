@@ -16,7 +16,7 @@
     
     <P>Current time is: {{ time }}</P>
     
-    <P>Air Temperature: {{ air }}&deg;C (approx)</P>
+    <P>Air Temperature: {{ air }}&deg;{{ units }} (approx)</P>
     
     <H2>Oven Temperatures</H2>
     
@@ -28,7 +28,7 @@
         <P>{{ temps[temp].name }}</P></TD>
         <TD>
         
-        <P>{{ temps[temp].temp }}&deg;C</P></TD>
+        <P>{{ temps[temp].temp }}&deg;{{ units }}</P></TD>
       </TR>
     </TABLE>
     

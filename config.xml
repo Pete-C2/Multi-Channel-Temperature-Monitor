@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEMPERATURE-MONITOR>
+<HARDWARE>
+  <CLOCK>
+    <PIN>11</PIN>
+  </CLOCK>
+  <DATA>
+    <PIN>7</PIN>
+  </DATA>
+</HARDWARE>
+<SENSORS>
+  <CHANNEL>
+    <NAME>Channel 1</NAME>
+    <CSPIN>3</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 2</NAME>
+    <CSPIN>5</CSPIN>
+  </CHANNEL>
+</SENSORS>
+<DISPLAY>
+  <UNITS>C</UNITS>
+</DISPLAY>
+</TEMPERATURE-MONITOR>
