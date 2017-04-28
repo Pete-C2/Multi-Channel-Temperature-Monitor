@@ -1,0 +1,25 @@
+body {
+    font-family: arial, helvetica, sans-serif;
+}
+
+
+h1 {
+    font-size: 8vw;
+}
+
+
+h2 {
+    font-size: 6vw;
+}
+
+body {
+    font-size: 4vw;
+}
+
+
+table.temptable {
+	font-size:5vw;
+
+	border-width: 0px;
+}
+

@@ -1,0 +1,22 @@
+<!DOCTYPE HTML PUBLIC "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//EN"
+ "hmpro4.dtd">
+
+<HTML>
+  
+  <HEAD>
+    <TITLE>Wood Fired Oven</TITLE>
+    <LINK REL="stylesheet" TYPE="text/css" 
+    HREF="{{ url_for('static', filename='style.css') }}">
+  </HEAD>
+  
+  <BODY>
+    
+    <H1>Wood Fired Oven Monitor</H1>
+    
+    <P>Current time is: {{ time }}</P>
+    
+    <P><A HREF="\temp">Temperatures</A></P>
+    
+    <P><A HREF="\confirm">Shutdown</A></P>
+  </BODY>
+</HTML>
