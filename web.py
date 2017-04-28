@@ -3,12 +3,15 @@ import datetime
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
 import xml.etree.ElementTree as ET
+import os
 
 app = Flask(__name__)
 
 # Read config from xml file
 
-tree = ET.parse('config.xml')
+# Find directory of the program
+dir = os.path.dirname(os.path.abspath(__file__))
+tree = ET.parse(dir+'/config.xml')
 root = tree.getroot()
 HW = root.find('HARDWARE')
 sensors = root.find('SENSORS')
