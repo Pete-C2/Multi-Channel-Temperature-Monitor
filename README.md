@@ -14,7 +14,7 @@ Installation:
 - Edit /etc/rc.local to autorun application:
    - sudo nano /etc/rc.local
    - Add: python /home/pi/.../web.py where ... is the location of your file
-- Edit config.xml to define system
+- Edit config.xml to define your system hardware. The defaults match my hardware
     
 Recommendations (to make life easier):
 - Set a [static IP address](https://www.modmypi.com/blog/tutorial-how-to-give-your-raspberry-pi-a-static-ip-address)
@@ -27,8 +27,13 @@ Load webpage Your.IP:5000 where Your.IP is the IP address of your Raspberry Pi (
 Click on:
 - Temperatures to begin monitoring. The webpage updates every two seconds.
 - Shutdown to turn the Raspberry Pi off from the web browser.
+- Start/Stop logging buttons to turn CSV logging on and off.
 
 ## Changelog
+
+### V0.3
+Added CSV log output.
+Tidied up code.
 
 ### V0.2
 Added config.xml to define the configuration.
