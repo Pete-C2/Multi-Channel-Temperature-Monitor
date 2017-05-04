@@ -145,29 +145,4 @@ class MAX31855Error(Exception):
          return repr(self.value)
 
 if __name__ == "__main__":
-
-    # Multi-chip example
     import time
-    cs_pins = [4, 17, 18, 24]
-    clock_pin = 23
-    data_pin = 22
-    units = "f"
-    thermocouples = []
-    for cs_pin in cs_pins:
-        thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units))
-    running = True
-    while(running):
-        try:
-            for thermocouple in thermocouples:
-                rj = thermocouple.get_rj()
-                try:
-                    tc = thermocouple.get()
-                except MAX31855Error as e:
-                    tc = "Error: "+ e.value
-                    running = False
-                print("tc: {} and rj: {}".format(tc, rj))
-            time.sleep(1)
-        except KeyboardInterrupt:
-            running = False
-    for thermocouple in thermocouples:
-        thermocouple.cleanup()
