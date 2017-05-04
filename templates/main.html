@@ -4,26 +4,34 @@
 <HTML>
   
   <HEAD>
-    <TITLE>Wood Fired Oven</TITLE>
+    <TITLE>{{ title }}</TITLE>
     <LINK REL="stylesheet" TYPE="text/css" 
     HREF="{{ url_for('static', filename='style.css') }}">
-  </HEAD>
+     <META HTTP-EQUIV="refresh" CONTENT="30">
+ </HEAD>
   
   <BODY>
     
-    <H1>Wood Fired Oven Monitor</H1>
+    <H1>{{ title }}</H1>
     
     <P>Current time is: {{ time }}</P>
     
     <P><A HREF="\temp">Temperatures</A></P>
+    <P><A HREF="\note">Notes</A></P>
+    <FORM METHOD="post" ACTION="/">
+    
+    <H3>Temperature Logging: {{ logging }}</H3>
+    <H4>{{ note }}</H4>
+
+    <BUTTON NAME="logging" VALUE="Log_Start" STYLE="width:35%" CLASS="buttong">Start
+    logging</BUTTON>
+    <BUTTON NAME="logging" VALUE="Log_Stop" STYLE="width:35%" CLASS="buttonr">Stop
+    logging</BUTTON>
+
+</FORM>
+    
+    <H3>Turn off</H3>
     
     <P><A HREF="\confirm">Shutdown</A></P>
-
-    <form method="post" action="/">
-	   <h3>Temperature Logging</h3>
-	   <button name="logging" align="left" data-inline="true" value="Log_Start"> Start logging</button>
-      <button name="logging" align="left" data-inline="true" value="Log_Stop"> Stop logging</button>
-    </form>
-
   </BODY>
 </HTML>

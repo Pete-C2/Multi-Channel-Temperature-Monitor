@@ -43,6 +43,7 @@ for child in sensors:
 
 # Read display settings configuration
 units = display.find('UNITS').text.lower()
+title = display.find('TITLE').text
 
 channel_names = []
 for child in sensors:
@@ -59,23 +60,41 @@ for child in sensors:
 logging = root.find('LOGGING')
 log_interval = int(logging.find('INTERVAL').text)*60  # Interval in minutes from config file
 log_status = "Off"  # Values: Off -> On -> Stop -> Off
+pending_note = ""
+
 
 # Flask web page code
 
 @app.route('/')
 def index():
+     global title
+     global log_status
+     global pending_note
      now = datetime.datetime.now()
      timeString = now.strftime("%H:%M on %d-%m-%Y")
-     templateData = {'time': timeString}
+     if log_status == "On":
+          logging = "Active"
+     else:
+          logging = "Inactive"
+     if pending_note <> "":
+          note = "Pending note: " + pending_note
+     else:
+          note = ""
+     templateData = {
+                     'title' : title,
+                     'time': timeString,
+                     'logging' : logging,
+                     'note' : note
+                    }
      return render_template('main.html', **templateData)
 
-@app.route("/", methods=['POST'])  
+@app.route("/", methods=['POST'])   # Seems to be run regardless of which page the post comes from
 def log_button():
      global log_status
-     if request.method == 'POST':  
+     global pending_note
+     if request.method == 'POST':
           # Get the value from the submitted form  
-          submitted_value = request.form['logging']  
-      
+          submitted_value = request.form['logging']
           if submitted_value == "Log_Start":
                if (log_status == "Off"):
                     log_status = "On"
@@ -84,8 +103,21 @@ def log_button():
           if submitted_value =="Log_Stop":   
                if (log_status == "On"):
                     log_status = "Stop"
-     return index()           
-
+          if submitted_value =="Add_Note":
+               pending_note = request.form['note']
+     return index()
+@app.route('/note')
+def note():
+     if pending_note <> "":
+          note = "Pending note: " + pending_note
+     else:
+          note = ""
+     templateData = {
+                     'title' : title,
+                     'note' : note
+                    }
+     return render_template('note.html', **templateData)
+  
 @app.route('/temp')
 def temp():
      now = datetime.datetime.now()
@@ -104,7 +136,6 @@ def temp():
                 tc = int(thermocouple.get())
           except MAX31855Error as e:
                 tc = "Error: "+ e.value
-                running = False
 
           temps[channel]['temp'] = tc
           channel = channel + 1
@@ -113,6 +144,7 @@ def temp():
           thermocouple.cleanup()
        
      templateData = {
+                'title' : title,
                 'time': timeString,
                 'air' : air_temp,
                 'temps' : temps,
@@ -123,7 +155,10 @@ def temp():
 
 @app.route('/confirm')
 def confirm():
-     return render_template('confirm.html')
+     templateData = {
+                'title' : title
+                }
+     return render_template('confirm.html', **templateData)
 
 @app.route('/shutdown')
 def shutdown():
@@ -132,7 +167,10 @@ def shutdown():
      process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
      output = process.communicate()[0]
      print output
-     return render_template('shutdown.html')
+     templateData = {
+                'title' : title
+                }
+     return render_template('shutdown.html', **templateData)
 
 @app.route('/cancel')
 def cancel():
@@ -141,9 +179,10 @@ def cancel():
      process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
      output = process.communicate()[0]
      print output
-     return render_template('main.html')
 
-# Logging code
+     return index()
+
+# Logging code: write a CSV file with header and then one set of sensor measurements per interval
 
 class LogThread ( threading.Thread ):
 
@@ -155,6 +194,7 @@ class LogThread ( threading.Thread ):
           global clock_pin
           global data_pin
           global units
+          global pending_note
           
           now = datetime.datetime.now()
           filetime = now.strftime("%Y-%m-%d-%H-%M")
@@ -164,6 +204,7 @@ class LogThread ( threading.Thread ):
                row = ["Date-Time"]
                for channels in temps:
                     row.append( temps[channels]['name'])
+               row.append("Notes")
                logfile.writerow(row)
 
           while log_status == "On":
@@ -180,12 +221,13 @@ class LogThread ( threading.Thread ):
                                tc = int(thermocouple.get())
                          except MAX31855Error as e:
                                tc = ""
-                               running = False
-
                          row.append(tc)
  
                     for thermocouple in thermocouples:
                          thermocouple.cleanup()
+                    if pending_note <> "":
+                         row.append(pending_note)
+                         pending_note = ""
                     logfile.writerow(row)
                time.sleep(log_interval)
           log_status = "Off"

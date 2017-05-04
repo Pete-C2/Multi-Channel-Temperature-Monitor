@@ -7,19 +7,20 @@ Requires:
   - sudo apt-get install python3-flask
 - A [Raspberry Pi](http://www.raspberrypi.org/).
 - Hardware with [MAX31855 temperature monitors](https://www.maximintegrated.com/en/products/analog/sensors-and-sensor-interface/MAX31855.html):
-  - Design updated for flexible number of sensors
+  - Design updated for flexible number of sensors.
 
 Installation:
-- Copy files to a folder on the Raspberry Pi
+- Copy files to a folder on the Raspberry Pi.
 - Edit /etc/rc.local to autorun application:
    - sudo nano /etc/rc.local
-   - Add: python /home/pi/.../web.py where ... is the location of your file
-- Edit config.xml to define your system hardware. The defaults match my hardware
+   - Add: python /home/pi/.../web.py where ... is the location of your file.
+- Edit config.xml to define your system hardware. The defaults match my hardware.
     
 Recommendations (to make life easier):
-- Set a [static IP address](https://www.modmypi.com/blog/tutorial-how-to-give-your-raspberry-pi-a-static-ip-address)
-- Define a [hostname](http://www.simonthepiman.com/how_to_rename_my_raspberry_pi.php)
-- Create a [fileshare](http://raspberrypihq.com/how-to-share-a-folder-with-a-windows-computer-from-a-raspberry-pi/)
+- Set a [static IP address](https://www.modmypi.com/blog/tutorial-how-to-give-your-raspberry-pi-a-static-ip-address).
+- Define a [hostname](http://www.simonthepiman.com/how_to_rename_my_raspberry_pi.php).
+- Create a [fileshare](http://raspberrypihq.com/how-to-share-a-folder-with-a-windows-computer-from-a-raspberry-pi/).
+- Install [VNC](https://www.raspberrypi.org/documentation/remote-access/vnc/) for full headless access.
 
 ## Use
 
@@ -28,15 +29,23 @@ Click on:
 - Temperatures to begin monitoring. The webpage updates every two seconds.
 - Shutdown to turn the Raspberry Pi off from the web browser.
 - Start/Stop logging buttons to turn CSV logging on and off.
+- Notes page and add a note to be appended to next temperature reading.
 
 ## Changelog
 
+### V0.4
+Added optional note to CSV output.
+
+Added HTML page title to XML configuration
+
 ### V0.3
 Added CSV log output.
+
 Tidied up code.
 
 ### V0.2
 Added config.xml to define the configuration.
+
 Supports arbitrary number of channels.
 
 ### V0.1

@@ -19,6 +19,7 @@
   </CHANNEL>
 </SENSORS>
 <DISPLAY>
+  <TITLE>Wood Fired Oven Monitor</TITLE>
   <UNITS>C</UNITS>
 </DISPLAY>
 <LOGGING>
