@@ -13,7 +13,7 @@ Installation:
 - Copy files to a folder on the Raspberry Pi.
 - Edit /etc/rc.local to autorun application:
    - sudo nano /etc/rc.local
-   - Add: python /home/pi/.../web.py where ... is the location of your file.
+   - Add: python /home/pi/.../temperature-monitor.py where ... is the location of your file.
 - Edit config.xml to define your system hardware. The defaults match my hardware.
     
 Recommendations (to make life easier):
