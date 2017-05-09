@@ -133,7 +133,7 @@ def temp():
           if (channel == 1):
                air_temp = int(thermocouple.get_rj())
           try:
-                tc = int(thermocouple.get())
+                tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
           except MAX31855Error as e:
                 tc = "Error: "+ e.value
 
