@@ -17,6 +17,46 @@
     <NAME>Channel 2</NAME>
     <CSPIN>5</CSPIN>
   </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 3</NAME>
+    <CSPIN>13</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 4</NAME>
+    <CSPIN>15</CSPIN>
+  </CHANNEL> 
+  <CHANNEL>
+    <NAME>Channel 5</NAME>
+    <CSPIN>19</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 6</NAME>
+    <CSPIN>21</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 7</NAME>
+    <CSPIN>23</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 8</NAME>
+    <CSPIN>29</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 9</NAME>
+    <CSPIN>31</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 10</NAME>
+    <CSPIN>33</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 11</NAME>
+    <CSPIN>35</CSPIN>
+  </CHANNEL>
+  <CHANNEL>
+    <NAME>Channel 12</NAME>
+    <CSPIN>37</CSPIN>
+  </CHANNEL>
 </SENSORS>
 <DISPLAY>
   <TITLE>Wood Fired Oven Monitor</TITLE>

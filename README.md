@@ -24,12 +24,7 @@ Recommendations (to make life easier):
 
 ## Use
 
-Load webpage Your.IP:5000 where Your.IP is the IP address of your Raspberry Pi (hence the recommendation to set a static IP address) or //hostname:5000.
-Click on:
-- Temperatures to begin monitoring. The webpage updates every two seconds.
-- Shutdown to turn the Raspberry Pi off from the web browser.
-- Start/Stop logging buttons to turn CSV logging on and off.
-- Notes page and add a note to be appended to next temperature reading.
+See wiki.
 
 ## Changelog
 
