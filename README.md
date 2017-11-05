@@ -28,10 +28,15 @@ See wiki.
 
 ## Changelog
 
+### V1.0
+Defined twelve temperature monitoring channels.
+
+Considered suitable for use.
+
 ### V0.4
 Added optional note to CSV output.
 
-Added HTML page title to XML configuration
+Added HTML page title to XML configuration.
 
 ### V0.3
 Added CSV log output.
