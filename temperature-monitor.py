@@ -162,7 +162,7 @@ def temp():
                                    else:
                                         age_string = "(" + str(int(age.seconds/60)) + " mins)"
                           if (age.seconds > (5 * 60)): # 5 mins
-                              temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                              temps[channel]['temp'] = tc + ". Last: " + temps[channel]['last']
                      else:
                           if (age.days == 1):
                               age_string = "(" + str(age.days) + " day)"
