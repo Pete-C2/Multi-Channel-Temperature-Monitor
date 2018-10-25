@@ -21,6 +21,7 @@ app = Flask(__name__)
 
 # Find directory of the program
 dir = os.path.dirname(os.path.abspath(__file__))
+
 # Get the configuration
 tree = ET.parse(dir+'/config.xml')
 root = tree.getroot()
@@ -49,11 +50,11 @@ channel_names = []
 for child in sensors:
      channel_names.append(child.find('NAME').text)
      
-# Create a dictionary called temps to store the temperatures and names:
+# Create a dictionary called temps to store the temperatures and names, plus the last measurement time:
 temps = {}
 channel = 1
 for child in sensors:
-     temps[channel] = {'name' : child.find('NAME').text, 'temp' : ''}
+     temps[channel] = {'name' : child.find('NAME').text, 'temp' : '', 'time' : 'Never', 'age' : ''}
      channel = channel + 1
 
 # Read logging
@@ -134,10 +135,44 @@ def temp():
                air_temp = int(thermocouple.get_rj())
           try:
                 tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
+                temps[channel]['time'] = now
+                temps[channel]['age'] = ''
+                temps[channel]['temp'] = tc
+                temps[channel]['last'] = tc # Record the last valid measurement
           except MAX31855Error as e:
                 tc = "Error: "+ e.value
+                if (temps[channel]['time'] == 'Never'):
+                     age_string = "(Never measured)"
+                     temps[channel]['temp'] = tc
+                else:
+                     temps[channel]['temp'] = temps[channel]['last']
+                     age = now - temps[channel]['time']
+                     if (age.days == 0):
+                          if (age.seconds < 60):
+                              age_string = "(" + str(age.seconds) + "s)"
+                          else:
+                              if ((int(age.seconds/60)) == 1):
+                                   age_string = "(" + str(int(age.seconds/60)) + " min)"
+                              else:
+                                   if (age.seconds > (60 * 60)): # > 1 hour
+                                        if ((int(age.seconds/60/60)) == 1):
+                                             age_string = "(" + str(int(age.seconds/60/60)) + " hour)"
+                                        else:
+                                             age_string = "(" + str(int(age.seconds/60/60)) + " hours)"
+                                   else:
+                                        age_string = "(" + str(int(age.seconds/60)) + " mins)"
+                          if (age.seconds > (5 * 60)): # 5 mins
+                              temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                     else:
+                          if (age.days == 1):
+                              age_string = "(" + str(age.days) + " day)"
+                          else:
+                               age_string = "(" + str(age.days) + " days)"
+                          temps[channel]['temp'] = tc
 
-          temps[channel]['temp'] = tc
+                temps[channel]['age'] = age_string
+
+          
           channel = channel + 1
 
      for thermocouple in thermocouples:
