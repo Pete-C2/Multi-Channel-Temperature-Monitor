@@ -77,7 +77,7 @@ def index():
           logging = "Active"
      else:
           logging = "Inactive"
-     if pending_note <> "":
+     if pending_note != "":
           note = "Pending note: " + pending_note
      else:
           note = ""
@@ -109,7 +109,7 @@ def log_button():
      return index()
 @app.route('/note')
 def note():
-     if pending_note <> "":
+     if pending_note != "":
           note = "Pending note: " + pending_note
      else:
           note = ""
@@ -201,7 +201,7 @@ def shutdown():
      import subprocess
      process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
      output = process.communicate()[0]
-     print output
+     print (output)
      templateData = {
                 'title' : title
                 }
@@ -213,7 +213,7 @@ def cancel():
      import subprocess
      process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
      output = process.communicate()[0]
-     print output
+     print (output)
 
      return index()
 
@@ -260,7 +260,7 @@ class LogThread ( threading.Thread ):
  
                     for thermocouple in thermocouples:
                          thermocouple.cleanup()
-                    if pending_note <> "":
+                    if pending_note != "":
                          row.append(pending_note)
                          pending_note = ""
                     logfile.writerow(row)
