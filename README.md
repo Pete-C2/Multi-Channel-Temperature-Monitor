@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V1.2.1
+Updated to Python3
+
 ### V1.1
 As a result of errors observered on the wood oven, typically short to ground error, code amended to record the last valid temperature and to indicate how old the measurement is.
 
