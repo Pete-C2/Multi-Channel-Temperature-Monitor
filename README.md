@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V1.2.2
+Initial REST implementation
+
 ### V1.2.1
 Updated to Python3
 
