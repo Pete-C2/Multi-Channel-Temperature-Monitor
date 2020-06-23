@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V1.2.3
+Started to refactor code
+
 ### V1.2.2
 Initial REST implementation
 
