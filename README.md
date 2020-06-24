@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V1.2.5
+Merged sensor definition
+
 ### V1.2.4
 Reverted some changes as HTML and REST api's need two different data structures
 
