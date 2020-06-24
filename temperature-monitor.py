@@ -25,7 +25,8 @@ sensor_fields = {
 }
 
 measurement_fields = {
-     'temperature': fields.String
+     'temperature': fields.String,
+     'age' : fields.String
 }
 
 class SystemConfig(Resource):
@@ -86,13 +87,16 @@ class MeasurementThread ( threading.Thread ):
                for thermocouple in thermocouples:
                     if (channel == 1):
                          air_temp = int(thermocouple.get_rj())
+                         sensors[0]['temperature'] = air_temp
                     try:
                          
-                         tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
+                         tc = str(int(thermocouple.get()))
                          temps[channel]['time'] = now
                          temps[channel]['age'] = ''
-                         temps[channel]['temp'] = tc
+                         temps[channel]['temp'] = tc+u'\N{DEGREE SIGN}'+units.upper()
                          temps[channel]['last'] = tc # Record the last valid measurement
+                         sensors[channel]['temperature'] = tc
+                         sensors[channel]['age'] = ''
                     except MAX31855Error as e:
                          tc = "Error: "+ e.value
                          if (temps[channel]['time'] == 'Never'):
@@ -125,6 +129,8 @@ class MeasurementThread ( threading.Thread ):
                                     temps[channel]['temp'] = tc
 
                          temps[channel]['age'] = age_string
+                         sensors[channel]['temperature'] = temps[channel]['temp']
+                         sensors[channel]['age'] = age_string
 
                     channel = channel + 1
                #end = datetime.datetime.now()
@@ -184,7 +190,7 @@ temps = {}
 channel = 1
 for child in sensors_cfg:
      # sensors used to store measurements for REST API
-     sensors.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-', 'time' : 'Never', 'age' : ''})
+     sensors.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-', 'age' : ''})
      # temps used to store measurements for Flask HTML API
      temps[channel] = {'name' : child.find('NAME').text, 'temp' : '', 'time' : 'Never', 'age' : ''}
      channel = channel + 1
@@ -267,6 +273,9 @@ def note():
 def temp():
      now = datetime.datetime.now()
      timeString = now.strftime("%H:%M on %d-%m-%Y")
+
+     # TODO: Consider what happens if the thread is updating the data at the same time as display
+     # Can a safe copy be made?
        
      templateData = {
                 'title' : title,
@@ -330,6 +339,7 @@ class LogThread ( threading.Thread ):
                row = ["Date-Time"]
                for channels in sensors:
                     row.append( sensors[channels]['name'])
+                    # TODO: Add age of measurement
                row.append("Notes")
                logfile.writerow(row)
 
