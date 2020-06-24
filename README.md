@@ -28,6 +28,10 @@ See wiki.
 
 ## Changelog
 
+### V2.0
+Completed updated to REST interface
+Logging uses measurements from measurement thread
+
 ### V1.2.6
 Created thread to take measurements
 

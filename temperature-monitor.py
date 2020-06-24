@@ -94,7 +94,7 @@ class MeasurementThread ( threading.Thread ):
                          tc = str(int(thermocouple.get()))
                          temps[channel]['time'] = now
                          temps[channel]['age'] = ''
-                         temps[channel]['temp'] = tc+u'\N{DEGREE SIGN}'+units.upper()
+                         temps[channel]['temperature'] = tc+u'\N{DEGREE SIGN}'+units.upper()
                          temps[channel]['last'] = tc # Record the last valid measurement
                          sensors[channel]['temperature'] = tc
                          sensors[channel]['age'] = ''
@@ -102,9 +102,9 @@ class MeasurementThread ( threading.Thread ):
                          tc = "Error: "+ e.value
                          if (temps[channel]['time'] == 'Never'):
                                age_string = "(Never measured)"
-                               temps[channel]['temp'] = tc
+                               temps[channel]['temperature'] = tc
                          else:
-                               temps[channel]['temp'] = temps[channel]['last']
+                               temps[channel]['temperature'] = temps[channel]['last']
                                age = now - temps[channel]['time']
                                if (age.days == 0):
                                     if (age.seconds < 60):
@@ -121,16 +121,16 @@ class MeasurementThread ( threading.Thread ):
                                              else:
                                                   age_string = "(" + str(int(age.seconds/60)) + " mins)"
                                     if (age.seconds > (5 * 60)): # 5 mins
-                                        temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                                        temps[channel]['temperature'] = tc + ". Last: " + str(temps[channel]['last'])
                                else:
                                     if (age.days == 1):
                                         age_string = "(" + str(age.days) + " day)"
                                     else:
                                          age_string = "(" + str(age.days) + " days)"
-                                    temps[channel]['temp'] = tc
+                                    temps[channel]['temperature'] = tc
 
                          temps[channel]['age'] = age_string
-                         sensors[channel]['temperature'] = temps[channel]['temp']
+                         sensors[channel]['temperature'] = temps[channel]['temperature']
                          sensors[channel]['age'] = age_string
 
                     channel = channel + 1
@@ -156,7 +156,6 @@ HW_cfg = root_cfg.find('HARDWARE')
 sensors_cfg = root_cfg.find('SENSORS')
 display_cfg = root_cfg.find('DISPLAY')
 logging_cfg = root_cfg.find('LOGGING')
-# TODO - change these to _cfg
 
 # Read hardware configuration
 # Clock
@@ -193,7 +192,7 @@ for child in sensors_cfg:
      # sensors used to store measurements for REST API
      sensors.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-', 'age' : ''})
      # temps used to store measurements for Flask HTML API
-     temps[channel] = {'name' : child.find('NAME').text, 'temp' : '', 'time' : 'Never', 'age' : ''}
+     temps[channel] = {'name' : child.find('NAME').text, 'temperature' : '', 'time' : 'Never', 'age' : ''}
      channel = channel + 1
 
 # Read logging
@@ -335,34 +334,25 @@ class LogThread ( threading.Thread ):
           now = datetime.datetime.now()
           filetime = now.strftime("%Y-%m-%d-%H-%M")
           filename=dir+'/logging/'+filetime+'_temperature_log.csv'
-          with open(filename, 'ab') as csvfile:
+          with open(filename, 'a') as csvfile:
                logfile = csv.writer(csvfile, delimiter=',', quotechar='"')
                row = ["Date-Time"]
-               for channels in sensors:
-                    row.append( sensors[channels]['name'])
-                    # TODO: Add age of measurement
+               for channels in temps:
+                    row.append( temps[channels]['name'])
+                    row.append("Age")
                row.append("Notes")
                logfile.writerow(row)
 
           while log_status == "On":
-               with open(filename, 'ab') as csvfile:
+               with open(filename, 'a') as csvfile:
                     logfile = csv.writer(csvfile, delimiter=',', quotechar='"')
                     now = datetime.datetime.now()
                     row = [now.strftime("%d/%m/%Y %H:%M")]
-                    # TODO: Change the below to use the same data as elsewhere
-                    thermocouples = []
-                    for cs_pin in cs_pins:
-                         thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
 
-                    for thermocouple in thermocouples:
-                         try:
-                               tc = int(thermocouple.get())
-                         except MAX31855Error as e:
-                               tc = ""
-                         row.append(tc)
- 
-                    for thermocouple in thermocouples:
-                         thermocouple.cleanup()
+                    for channel in temps:
+                         row.append(temps[channel]['temperature'])
+                         row.append(temps[channel]['age'])
+
                     if pending_note != "":
                          row.append(pending_note)
                          pending_note = ""
