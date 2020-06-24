@@ -7,6 +7,7 @@
   <DATA>
     <PIN>7</PIN>
   </DATA>
+  <INTERVAL>1</INTERVAL>
 </HARDWARE>
 <SENSORS>
   <CHANNEL>

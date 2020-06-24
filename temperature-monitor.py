@@ -4,6 +4,7 @@ Presents a set of webpages to display the temperature from an arbitrary number o
 """
 
 from flask import Flask, render_template, request
+from flask_restful import Api, Resource, reqparse, fields, marshal
 import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -13,7 +14,6 @@ import csv
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
 
-<<<<<<< HEAD
 config_fields = {
     'name': fields.String,
     'units': fields.String
@@ -25,7 +25,8 @@ sensor_fields = {
 }
 
 measurement_fields = {
-     'temperature': fields.String
+     'temperature': fields.String,
+     'age' : fields.String
 }
 
 class SystemConfig(Resource):
@@ -45,7 +46,7 @@ class TemperatureSensorList(Resource):
         super(TemperatureSensorList, self).__init__()
 
     def get(self):
-        return {'sensors': [marshal(temperatureSensor, sensor_fields) for temperatureSensor in sensor_ids]}
+        return {'sensors': [marshal(temperatureSensor, sensor_fields) for temperatureSensor in sensors]}
 
 class TemperatureSensor(Resource):
 
@@ -53,17 +54,93 @@ class TemperatureSensor(Resource):
         super(TemperatureSensor, self).__init__()
 
     def get(self, id):
-          sensor = [sensor for sensor in sensor_ids if sensor['id'] == id] # was sensor_measurements
+          sensor = [sensor for sensor in sensors if sensor['id'] == id] 
           if len(sensor) == 0:
                abort(404)
                
           return {'sensor': marshal(sensor[0], measurement_fields)}
 
 
+# Sensor measurements
+class MeasurementThread ( threading.Thread ):
 
-=======
-app = Flask(__name__)
->>>>>>> parent of 333aec5... Initial code for REST interface
+     def run ( self ):
+          global sensors
+          global temps
+          global air_temp
+          global cs_pins
+          global clock_pin
+          global data_pin
+          global units
+
+          thermocouples = []
+         
+          for cs_pin in cs_pins:
+               thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
+
+          while True: # TODO: Ideally want to detect when closing to exit the loop
+               channel = 1
+               now = datetime.datetime.now()
+               #print(now)
+               timeString = now.strftime("%H:%M on %d-%m-%Y")
+               
+               
+               for thermocouple in thermocouples:
+                    if (channel == 1):
+                         air_temp = int(thermocouple.get_rj())
+                         sensors[0]['temperature'] = air_temp
+                    try:
+                         
+                         tc = str(int(thermocouple.get()))
+                         temps[channel]['time'] = now
+                         temps[channel]['age'] = ''
+                         temps[channel]['temperature'] = tc+u'\N{DEGREE SIGN}'+units.upper()
+                         temps[channel]['last'] = tc # Record the last valid measurement
+                         sensors[channel]['temperature'] = tc
+                         sensors[channel]['age'] = ''
+                    except MAX31855Error as e:
+                         tc = "Error: "+ e.value
+                         if (temps[channel]['time'] == 'Never'):
+                               age_string = "(Never measured)"
+                               temps[channel]['temperature'] = tc
+                         else:
+                               temps[channel]['temperature'] = temps[channel]['last']
+                               age = now - temps[channel]['time']
+                               if (age.days == 0):
+                                    if (age.seconds < 60):
+                                        age_string = "(" + str(age.seconds) + "s)"
+                                    else:
+                                        if ((int(age.seconds/60)) == 1):
+                                             age_string = "(" + str(int(age.seconds/60)) + " min)"
+                                        else:
+                                             if (age.seconds > (60 * 60)): # > 1 hour
+                                                  if ((int(age.seconds/60/60)) == 1):
+                                                       age_string = "(" + str(int(age.seconds/60/60)) + " hour)"
+                                                  else:
+                                                       age_string = "(" + str(int(age.seconds/60/60)) + " hours)"
+                                             else:
+                                                  age_string = "(" + str(int(age.seconds/60)) + " mins)"
+                                    if (age.seconds > (5 * 60)): # 5 mins
+                                        temps[channel]['temperature'] = tc + ". Last: " + str(temps[channel]['last'])
+                               else:
+                                    if (age.days == 1):
+                                        age_string = "(" + str(age.days) + " day)"
+                                    else:
+                                         age_string = "(" + str(age.days) + " days)"
+                                    temps[channel]['temperature'] = tc
+
+                         temps[channel]['age'] = age_string
+                         sensors[channel]['temperature'] = temps[channel]['temperature']
+                         sensors[channel]['age'] = age_string
+
+                    channel = channel + 1
+               #end = datetime.datetime.now()
+               #print(end-now)
+
+               time.sleep(measurement_interval)
+
+          for thermocouple in thermocouples:
+               thermocouple.cleanup()
 
 # Initialisation
 
@@ -79,7 +156,6 @@ HW_cfg = root_cfg.find('HARDWARE')
 sensors_cfg = root_cfg.find('SENSORS')
 display_cfg = root_cfg.find('DISPLAY')
 logging_cfg = root_cfg.find('LOGGING')
-# TODO - change these to _cfg
 
 # Read hardware configuration
 # Clock
@@ -88,39 +164,36 @@ clock_pin = int(CLK.find('PIN').text)
 # Data
 DATA = HW_cfg.find('DATA')
 data_pin = int(DATA.find('PIN').text)
+# Measurement interval
+measurement_interval = int(HW_cfg.find('INTERVAL').text) # Interval in seconds between measurements
 # Chip Selects
 cs_pins = []
 for child in sensors_cfg:
      cs_pins.append(int(child.find('CSPIN').text))
 
+
 # Read display settings configuration
 units = display_cfg.find('UNITS').text.lower()
 title = display_cfg.find('TITLE').text
 
-channel_names = []
-sensor_ids = [
+sensors = [
     {
         'id': 0,
         'name': u'Air',
-        'temperature': u'-'
+        'temperature': u'-',
+        'time' : 'Never',
+        'age' : ''
     
     }]
-channel = 1
-for child in sensors_cfg:
-     channel_names.append(child.find('NAME').text)
-     sensor_ids.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-'})
-     channel = channel + 1
-# TODO: The above needs rationalising as it is storing the same info twice in different structures
-
-     
-# Create a dictionary called temps to store the temperatures and names, plus the last measurement time:
+air_temp = '-'
 temps = {}
 channel = 1
 for child in sensors_cfg:
-     temps[channel] = {'name' : child.find('NAME').text, 'temp' : '', 'time' : 'Never', 'age' : ''}
+     # sensors used to store measurements for REST API
+     sensors.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-', 'age' : ''})
+     # temps used to store measurements for Flask HTML API
+     temps[channel] = {'name' : child.find('NAME').text, 'temperature' : '', 'time' : 'Never', 'age' : ''}
      channel = channel + 1
-# TODO: Create one structure that can be used everywhere. Can it be merged with sensor_ids so that there is one set of data?
-# Include all temps files in sensor_ids and rename to sensors
 
 # Read logging
 logging_cfg = root_cfg.find('LOGGING')
@@ -128,7 +201,8 @@ log_interval = int(logging_cfg.find('INTERVAL').text)*60  # Interval in minutes 
 log_status = "Off"  # Values: Off -> On -> Stop -> Off
 pending_note = ""
 
-<<<<<<< HEAD
+MeasurementThread().start()
+
 app = Flask(__name__)
 
 # Setup Flask REST interface
@@ -139,8 +213,6 @@ apiREST.add_resource(SystemConfig, '/temperaturemonitor/api/v1.0/config/systemco
 apiREST.add_resource(TemperatureSensorList, '/temperaturemonitor/api/v1.0/config/sensors', endpoint = 'temperature_sensors')
 apiREST.add_resource(TemperatureSensor, '/temperaturemonitor/api/v1.0/measure/sensors/<int:id>', endpoint = 'temperature_sensor')
 
-=======
->>>>>>> parent of 333aec5... Initial code for REST interface
 
 # Flask web page code
 
@@ -202,59 +274,8 @@ def temp():
      now = datetime.datetime.now()
      timeString = now.strftime("%H:%M on %d-%m-%Y")
 
-     thermocouples = []
-
-     channel = 1
-     for cs_pin in cs_pins:
-          thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
-
-     for thermocouple in thermocouples:
-          if (channel == 1):
-               air_temp = int(thermocouple.get_rj())
-          try:
-                tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
-                temps[channel]['time'] = now
-                temps[channel]['age'] = ''
-                temps[channel]['temp'] = tc
-                temps[channel]['last'] = tc # Record the last valid measurement
-          except MAX31855Error as e:
-                tc = "Error: "+ e.value
-                if (temps[channel]['time'] == 'Never'):
-                     age_string = "(Never measured)"
-                     temps[channel]['temp'] = tc
-                else:
-                     temps[channel]['temp'] = temps[channel]['last']
-                     age = now - temps[channel]['time']
-                     if (age.days == 0):
-                          if (age.seconds < 60):
-                              age_string = "(" + str(age.seconds) + "s)"
-                          else:
-                              if ((int(age.seconds/60)) == 1):
-                                   age_string = "(" + str(int(age.seconds/60)) + " min)"
-                              else:
-                                   if (age.seconds > (60 * 60)): # > 1 hour
-                                        if ((int(age.seconds/60/60)) == 1):
-                                             age_string = "(" + str(int(age.seconds/60/60)) + " hour)"
-                                        else:
-                                             age_string = "(" + str(int(age.seconds/60/60)) + " hours)"
-                                   else:
-                                        age_string = "(" + str(int(age.seconds/60)) + " mins)"
-                          if (age.seconds > (5 * 60)): # 5 mins
-                              temps[channel]['temp'] = tc + ". Last: " + temps[channel]['last']
-                     else:
-                          if (age.days == 1):
-                              age_string = "(" + str(age.days) + " day)"
-                          else:
-                               age_string = "(" + str(age.days) + " days)"
-                          temps[channel]['temp'] = tc
-
-                temps[channel]['age'] = age_string
-
-          
-          channel = channel + 1
-
-     for thermocouple in thermocouples:
-          thermocouple.cleanup()
+     # TODO: Consider what happens if the thread is updating the data at the same time as display
+     # Can a safe copy be made?
        
      templateData = {
                 'title' : title,
@@ -295,12 +316,9 @@ def cancel():
 
      return index()
 
-<<<<<<< HEAD
 
-=======
->>>>>>> parent of 333aec5... Initial code for REST interface
+          
 # Logging code: write a CSV file with header and then one set of sensor measurements per interval
-
 class LogThread ( threading.Thread ):
 
      def run ( self ):
@@ -316,32 +334,25 @@ class LogThread ( threading.Thread ):
           now = datetime.datetime.now()
           filetime = now.strftime("%Y-%m-%d-%H-%M")
           filename=dir+'/logging/'+filetime+'_temperature_log.csv'
-          with open(filename, 'ab') as csvfile:
+          with open(filename, 'a') as csvfile:
                logfile = csv.writer(csvfile, delimiter=',', quotechar='"')
                row = ["Date-Time"]
                for channels in temps:
                     row.append( temps[channels]['name'])
+                    row.append("Age")
                row.append("Notes")
                logfile.writerow(row)
 
           while log_status == "On":
-               with open(filename, 'ab') as csvfile:
+               with open(filename, 'a') as csvfile:
                     logfile = csv.writer(csvfile, delimiter=',', quotechar='"')
                     now = datetime.datetime.now()
                     row = [now.strftime("%d/%m/%Y %H:%M")]
-                    thermocouples = []
-                    for cs_pin in cs_pins:
-                         thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
 
-                    for thermocouple in thermocouples:
-                         try:
-                               tc = int(thermocouple.get())
-                         except MAX31855Error as e:
-                               tc = ""
-                         row.append(tc)
- 
-                    for thermocouple in thermocouples:
-                         thermocouple.cleanup()
+                    for channel in temps:
+                         row.append(temps[channel]['temperature'])
+                         row.append(temps[channel]['age'])
+
                     if pending_note != "":
                          row.append(pending_note)
                          pending_note = ""
@@ -349,7 +360,12 @@ class LogThread ( threading.Thread ):
                time.sleep(log_interval)
           log_status = "Off"
 
+def flaskThread():
+     # Start webserver
+     app.run(debug=False, host='0.0.0.0', port=5000)
+     
 if __name__ == '__main__':
-     app.run(debug=True, host='0.0.0.0')
+     threading.Thread(target=flaskThread).start()
+     appREST.run(debug=False, host='0.0.0.0', port=5001)
      
      

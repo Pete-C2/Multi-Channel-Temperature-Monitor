@@ -28,6 +28,16 @@ See wiki.
 
 ## Changelog
 
+### V2.0
+Completed updated to REST interface
+Logging uses measurements from measurement thread
+
+### V1.2.6
+Created thread to take measurements
+
+### V1.2.5
+Merged sensor definition
+
 ### V1.2.4
 Reverted some changes as HTML and REST api's need two different data structures
 
