@@ -81,6 +81,7 @@ class MeasurementThread ( threading.Thread ):
           while True: # TODO: Ideally want to detect when closing to exit the loop
                channel = 1
                now = datetime.datetime.now()
+               #print(now)
                timeString = now.strftime("%H:%M on %d-%m-%Y")
                
                
@@ -164,13 +165,13 @@ clock_pin = int(CLK.find('PIN').text)
 # Data
 DATA = HW_cfg.find('DATA')
 data_pin = int(DATA.find('PIN').text)
+# Measurement interval
+measurement_interval = int(HW_cfg.find('INTERVAL').text) # Interval in seconds between measurements
 # Chip Selects
 cs_pins = []
 for child in sensors_cfg:
      cs_pins.append(int(child.find('CSPIN').text))
-# Measurement interval
-# TODO: Add measurement interval to configuration file
-measurement_interval = 2 # Interval in seconds between measurements
+
 
 # Read display settings configuration
 units = display_cfg.find('UNITS').text.lower()
