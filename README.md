@@ -28,8 +28,15 @@ See wiki.
 
 ## Changelog
 
+### V1.2.4
+Reverted some changes as HTML and REST api's need two different data structures
+
+### V1.2.3
+Started to refactor code
+
 ### V1.2.2
 Initial REST implementation
+
 
 ### V1.2.1
 Updated to Python3

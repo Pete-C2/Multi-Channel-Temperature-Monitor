@@ -4,7 +4,6 @@ Presents a set of webpages to display the temperature from an arbitrary number o
 """
 
 from flask import Flask, render_template, request
-from flask_restful import Api, Resource, reqparse, fields, marshal
 import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -14,31 +13,31 @@ import csv
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
 
-class SystemName(Resource):
-     def __init__(self):
-          #self.reqparse = reqparse.RequestParser()
-          #self.reqparse.add_argument('title', type = str, required = True, help = 'No title provided', location='json')
-          # Contine from https://blog.miguelgrinberg.com/post/designing-a-restful-api-using-flask-restful
-          super(SystemName, self).__init__()
-     def get(self):
-          return {'system': title} # marshal(system[0], system_fields)}
-
-sensor_ids = [
-    {
-        'id': 1,
-        'name': u'Ch1'
-    },
-    {
-        'id': 2,
-        'name': u'Ch2'
-    }
-]
+<<<<<<< HEAD
+config_fields = {
+    'name': fields.String,
+    'units': fields.String
+}
 
 sensor_fields = {
     'name': fields.String,
     'uri': fields.Url('temperature_sensor')
 }
 
+measurement_fields = {
+     'temperature': fields.String
+}
+
+class SystemConfig(Resource):
+     def __init__(self):
+          super(SystemConfig, self).__init__()
+     def get(self):
+          system_config = [
+              {
+                  'name': title,
+                  'units': units
+              }]
+          return {'config': marshal(system_config[0], config_fields)}
 
 class TemperatureSensorList(Resource):
 
@@ -54,14 +53,17 @@ class TemperatureSensor(Resource):
         super(TemperatureSensor, self).__init__()
 
     def get(self, id):
-          sensor = [sensor for sensor in sensor_ids if sensor['id'] == id]
+          sensor = [sensor for sensor in sensor_ids if sensor['id'] == id] # was sensor_measurements
           if len(sensor) == 0:
                abort(404)
                
-          return {'sensor': marshal(sensor[0], sensor_fields)}
+          return {'sensor': marshal(sensor[0], measurement_fields)}
 
 
 
+=======
+app = Flask(__name__)
+>>>>>>> parent of 333aec5... Initial code for REST interface
 
 # Initialisation
 
@@ -72,55 +74,73 @@ dir = os.path.dirname(os.path.abspath(__file__))
 
 # Get the configuration
 tree = ET.parse(dir+'/config.xml')
-root = tree.getroot()
-HW = root.find('HARDWARE')
-sensors = root.find('SENSORS')
-display = root.find('DISPLAY')
-logging = root.find('LOGGING')
+root_cfg = tree.getroot()
+HW_cfg = root_cfg.find('HARDWARE')
+sensors_cfg = root_cfg.find('SENSORS')
+display_cfg = root_cfg.find('DISPLAY')
+logging_cfg = root_cfg.find('LOGGING')
+# TODO - change these to _cfg
 
 # Read hardware configuration
 # Clock
-CLK = HW.find('CLOCK')
+CLK = HW_cfg.find('CLOCK')
 clock_pin = int(CLK.find('PIN').text)
 # Data
-DATA = HW.find('DATA')
+DATA = HW_cfg.find('DATA')
 data_pin = int(DATA.find('PIN').text)
 # Chip Selects
 cs_pins = []
-for child in sensors:
+for child in sensors_cfg:
      cs_pins.append(int(child.find('CSPIN').text))
 
 # Read display settings configuration
-units = display.find('UNITS').text.lower()
-title = display.find('TITLE').text
+units = display_cfg.find('UNITS').text.lower()
+title = display_cfg.find('TITLE').text
 
 channel_names = []
-for child in sensors:
+sensor_ids = [
+    {
+        'id': 0,
+        'name': u'Air',
+        'temperature': u'-'
+    
+    }]
+channel = 1
+for child in sensors_cfg:
      channel_names.append(child.find('NAME').text)
+     sensor_ids.append({'id': channel, 'name':  child.find('NAME').text, 'temperature': u'-'})
+     channel = channel + 1
+# TODO: The above needs rationalising as it is storing the same info twice in different structures
+
      
 # Create a dictionary called temps to store the temperatures and names, plus the last measurement time:
 temps = {}
 channel = 1
-for child in sensors:
+for child in sensors_cfg:
      temps[channel] = {'name' : child.find('NAME').text, 'temp' : '', 'time' : 'Never', 'age' : ''}
      channel = channel + 1
+# TODO: Create one structure that can be used everywhere. Can it be merged with sensor_ids so that there is one set of data?
+# Include all temps files in sensor_ids and rename to sensors
 
 # Read logging
-logging = root.find('LOGGING')
-log_interval = int(logging.find('INTERVAL').text)*60  # Interval in minutes from config file
+logging_cfg = root_cfg.find('LOGGING')
+log_interval = int(logging_cfg.find('INTERVAL').text)*60  # Interval in minutes from config file
 log_status = "Off"  # Values: Off -> On -> Stop -> Off
 pending_note = ""
 
+<<<<<<< HEAD
 app = Flask(__name__)
 
 # Setup Flask REST interface
 
 appREST = Flask(__name__, static_url_path="")
 apiREST = Api(appREST)
-apiREST.add_resource(SystemName, '/temperaturemonitor/api/v1.0/config/systemname', endpoint = 'systemname')
+apiREST.add_resource(SystemConfig, '/temperaturemonitor/api/v1.0/config/systemconfig', endpoint = 'SystemConfig')
 apiREST.add_resource(TemperatureSensorList, '/temperaturemonitor/api/v1.0/config/sensors', endpoint = 'temperature_sensors')
-apiREST.add_resource(TemperatureSensor, '/temperaturemonitor/api/v1.0/config/sensors/<int:id>', endpoint = 'temperature_sensor')
+apiREST.add_resource(TemperatureSensor, '/temperaturemonitor/api/v1.0/measure/sensors/<int:id>', endpoint = 'temperature_sensor')
 
+=======
+>>>>>>> parent of 333aec5... Initial code for REST interface
 
 # Flask web page code
 
@@ -220,7 +240,7 @@ def temp():
                                    else:
                                         age_string = "(" + str(int(age.seconds/60)) + " mins)"
                           if (age.seconds > (5 * 60)): # 5 mins
-                              temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                              temps[channel]['temp'] = tc + ". Last: " + temps[channel]['last']
                      else:
                           if (age.days == 1):
                               age_string = "(" + str(age.days) + " day)"
@@ -275,34 +295,10 @@ def cancel():
 
      return index()
 
-# REST pages for Android App
+<<<<<<< HEAD
 
-##@appREST.route('/')
-##def index():
-##     global title
-##     global log_status
-##     global pending_note
-##     now = datetime.datetime.now()
-##     timeString = now.strftime("%H:%M on %d-%m-%Y")
-##     if log_status == "On":
-##          logging = "Active"
-##     else:
-##          logging = "Inactive"
-##     if pending_note != "":
-##          note = "Pending note: " + pending_note
-##     else:
-##          note = ""
-##     templateData = {
-##                     'title' : (title+" - REST"),
-##                     'time': timeString,
-##                     'logging' : logging,
-##                     'note' : note
-##                    }
-##     return render_template('main.html', **templateData)
-
-
-
-
+=======
+>>>>>>> parent of 333aec5... Initial code for REST interface
 # Logging code: write a CSV file with header and then one set of sensor measurements per interval
 
 class LogThread ( threading.Thread ):
@@ -353,12 +349,7 @@ class LogThread ( threading.Thread ):
                time.sleep(log_interval)
           log_status = "Off"
 
-def flaskThread():
-     # Start webserver
-     app.run(debug=False, host='0.0.0.0', port=5000)
-     
 if __name__ == '__main__':
-     threading.Thread(target=flaskThread).start()
-     appREST.run(debug=False, host='0.0.0.0', port=5001)
+     app.run(debug=True, host='0.0.0.0')
      
      
