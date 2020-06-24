@@ -4,7 +4,6 @@ Presents a set of webpages to display the temperature from an arbitrary number o
 """
 
 from flask import Flask, render_template, request
-from flask_restful import Api, Resource, reqparse, fields, marshal
 import datetime
 import xml.etree.ElementTree as ET
 import os
@@ -14,6 +13,7 @@ import csv
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
 
+<<<<<<< HEAD
 config_fields = {
     'name': fields.String,
     'units': fields.String
@@ -61,6 +61,9 @@ class TemperatureSensor(Resource):
 
 
 
+=======
+app = Flask(__name__)
+>>>>>>> parent of 333aec5... Initial code for REST interface
 
 # Initialisation
 
@@ -125,6 +128,7 @@ log_interval = int(logging_cfg.find('INTERVAL').text)*60  # Interval in minutes 
 log_status = "Off"  # Values: Off -> On -> Stop -> Off
 pending_note = ""
 
+<<<<<<< HEAD
 app = Flask(__name__)
 
 # Setup Flask REST interface
@@ -135,6 +139,8 @@ apiREST.add_resource(SystemConfig, '/temperaturemonitor/api/v1.0/config/systemco
 apiREST.add_resource(TemperatureSensorList, '/temperaturemonitor/api/v1.0/config/sensors', endpoint = 'temperature_sensors')
 apiREST.add_resource(TemperatureSensor, '/temperaturemonitor/api/v1.0/measure/sensors/<int:id>', endpoint = 'temperature_sensor')
 
+=======
+>>>>>>> parent of 333aec5... Initial code for REST interface
 
 # Flask web page code
 
@@ -234,7 +240,7 @@ def temp():
                                    else:
                                         age_string = "(" + str(int(age.seconds/60)) + " mins)"
                           if (age.seconds > (5 * 60)): # 5 mins
-                              temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                              temps[channel]['temp'] = tc + ". Last: " + temps[channel]['last']
                      else:
                           if (age.days == 1):
                               age_string = "(" + str(age.days) + " day)"
@@ -289,7 +295,10 @@ def cancel():
 
      return index()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of 333aec5... Initial code for REST interface
 # Logging code: write a CSV file with header and then one set of sensor measurements per interval
 
 class LogThread ( threading.Thread ):
@@ -340,12 +349,7 @@ class LogThread ( threading.Thread ):
                time.sleep(log_interval)
           log_status = "Off"
 
-def flaskThread():
-     # Start webserver
-     app.run(debug=False, host='0.0.0.0', port=5000)
-     
 if __name__ == '__main__':
-     threading.Thread(target=flaskThread).start()
-     appREST.run(debug=False, host='0.0.0.0', port=5001)
+     app.run(debug=True, host='0.0.0.0')
      
      
