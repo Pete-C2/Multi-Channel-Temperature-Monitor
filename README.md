@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V1.2.6
+Created thread to take measurements
+
 ### V1.2.5
 Merged sensor definition
 

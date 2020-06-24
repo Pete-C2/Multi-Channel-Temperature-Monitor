@@ -60,7 +60,80 @@ class TemperatureSensor(Resource):
           return {'sensor': marshal(sensor[0], measurement_fields)}
 
 
+# Sensor measurements
+class MeasurementThread ( threading.Thread ):
 
+     def run ( self ):
+          global sensors
+          global temps
+          global air_temp
+          global cs_pins
+          global clock_pin
+          global data_pin
+          global units
+
+          thermocouples = []
+         
+          for cs_pin in cs_pins:
+               thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
+
+          while True: # TODO: Ideally want to detect when closing to exit the loop
+               channel = 1
+               now = datetime.datetime.now()
+               timeString = now.strftime("%H:%M on %d-%m-%Y")
+               
+               
+               for thermocouple in thermocouples:
+                    if (channel == 1):
+                         air_temp = int(thermocouple.get_rj())
+                    try:
+                         
+                         tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
+                         temps[channel]['time'] = now
+                         temps[channel]['age'] = ''
+                         temps[channel]['temp'] = tc
+                         temps[channel]['last'] = tc # Record the last valid measurement
+                    except MAX31855Error as e:
+                         tc = "Error: "+ e.value
+                         if (temps[channel]['time'] == 'Never'):
+                               age_string = "(Never measured)"
+                               temps[channel]['temp'] = tc
+                         else:
+                               temps[channel]['temp'] = temps[channel]['last']
+                               age = now - temps[channel]['time']
+                               if (age.days == 0):
+                                    if (age.seconds < 60):
+                                        age_string = "(" + str(age.seconds) + "s)"
+                                    else:
+                                        if ((int(age.seconds/60)) == 1):
+                                             age_string = "(" + str(int(age.seconds/60)) + " min)"
+                                        else:
+                                             if (age.seconds > (60 * 60)): # > 1 hour
+                                                  if ((int(age.seconds/60/60)) == 1):
+                                                       age_string = "(" + str(int(age.seconds/60/60)) + " hour)"
+                                                  else:
+                                                       age_string = "(" + str(int(age.seconds/60/60)) + " hours)"
+                                             else:
+                                                  age_string = "(" + str(int(age.seconds/60)) + " mins)"
+                                    if (age.seconds > (5 * 60)): # 5 mins
+                                        temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
+                               else:
+                                    if (age.days == 1):
+                                        age_string = "(" + str(age.days) + " day)"
+                                    else:
+                                         age_string = "(" + str(age.days) + " days)"
+                                    temps[channel]['temp'] = tc
+
+                         temps[channel]['age'] = age_string
+
+                    channel = channel + 1
+               #end = datetime.datetime.now()
+               #print(end-now)
+
+               time.sleep(measurement_interval)
+
+          for thermocouple in thermocouples:
+               thermocouple.cleanup()
 
 # Initialisation
 
@@ -89,6 +162,9 @@ data_pin = int(DATA.find('PIN').text)
 cs_pins = []
 for child in sensors_cfg:
      cs_pins.append(int(child.find('CSPIN').text))
+# Measurement interval
+# TODO: Add measurement interval to configuration file
+measurement_interval = 2 # Interval in seconds between measurements
 
 # Read display settings configuration
 units = display_cfg.find('UNITS').text.lower()
@@ -103,6 +179,7 @@ sensors = [
         'age' : ''
     
     }]
+air_temp = '-'
 temps = {}
 channel = 1
 for child in sensors_cfg:
@@ -117,6 +194,8 @@ logging_cfg = root_cfg.find('LOGGING')
 log_interval = int(logging_cfg.find('INTERVAL').text)*60  # Interval in minutes from config file
 log_status = "Off"  # Values: Off -> On -> Stop -> Off
 pending_note = ""
+
+MeasurementThread().start()
 
 app = Flask(__name__)
 
@@ -188,60 +267,6 @@ def note():
 def temp():
      now = datetime.datetime.now()
      timeString = now.strftime("%H:%M on %d-%m-%Y")
-
-     thermocouples = []
-
-     channel = 1
-     for cs_pin in cs_pins:
-          thermocouples.append(MAX31855(cs_pin, clock_pin, data_pin, units, GPIO.BOARD))
-
-     for thermocouple in thermocouples:
-          if (channel == 1):
-               air_temp = int(thermocouple.get_rj())
-          try:
-                tc = str(int(thermocouple.get()))+u'\N{DEGREE SIGN}'+units.upper()
-                temps[channel]['time'] = now
-                temps[channel]['age'] = ''
-                temps[channel]['temp'] = tc
-                temps[channel]['last'] = tc # Record the last valid measurement
-          except MAX31855Error as e:
-                tc = "Error: "+ e.value
-                if (temps[channel]['time'] == 'Never'):
-                     age_string = "(Never measured)"
-                     temps[channel]['temp'] = tc
-                else:
-                     temps[channel]['temp'] = temps[channel]['last']
-                     age = now - temps[channel]['time']
-                     if (age.days == 0):
-                          if (age.seconds < 60):
-                              age_string = "(" + str(age.seconds) + "s)"
-                          else:
-                              if ((int(age.seconds/60)) == 1):
-                                   age_string = "(" + str(int(age.seconds/60)) + " min)"
-                              else:
-                                   if (age.seconds > (60 * 60)): # > 1 hour
-                                        if ((int(age.seconds/60/60)) == 1):
-                                             age_string = "(" + str(int(age.seconds/60/60)) + " hour)"
-                                        else:
-                                             age_string = "(" + str(int(age.seconds/60/60)) + " hours)"
-                                   else:
-                                        age_string = "(" + str(int(age.seconds/60)) + " mins)"
-                          if (age.seconds > (5 * 60)): # 5 mins
-                              temps[channel]['temp'] = tc + ". Last: " + str(temps[channel]['last'])
-                     else:
-                          if (age.days == 1):
-                              age_string = "(" + str(age.days) + " day)"
-                          else:
-                               age_string = "(" + str(age.days) + " days)"
-                          temps[channel]['temp'] = tc
-
-                temps[channel]['age'] = age_string
-
-          
-          channel = channel + 1
-
-     for thermocouple in thermocouples:
-          thermocouple.cleanup()
        
      templateData = {
                 'title' : title,
@@ -283,8 +308,8 @@ def cancel():
      return index()
 
 
+          
 # Logging code: write a CSV file with header and then one set of sensor measurements per interval
-
 class LogThread ( threading.Thread ):
 
      def run ( self ):
