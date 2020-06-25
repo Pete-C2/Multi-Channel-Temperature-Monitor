@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V2.0.1
+Corrected template to match changed variable name
+
 ### V2.0
 Completed updated to REST interface
 Logging uses measurements from measurement thread
