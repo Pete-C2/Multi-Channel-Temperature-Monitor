@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V2.0.2
+Simplified the REST systemconfig 
+
 ### V2.0.1
 Corrected template to match changed variable name
 

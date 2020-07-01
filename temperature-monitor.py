@@ -38,7 +38,8 @@ class SystemConfig(Resource):
                   'name': title,
                   'units': units
               }]
-          return {'config': marshal(system_config[0], config_fields)}
+          return {"name": "TouchPi", "units": "c"}
+     #{'config': marshal(system_config[0], config_fields)}
 
 class TemperatureSensorList(Resource):
 
