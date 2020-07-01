@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V2.0.3
+Simplified the REST sensors config
+
 ### V2.0.2
 Simplified the REST systemconfig 
 

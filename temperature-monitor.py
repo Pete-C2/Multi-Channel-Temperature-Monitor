@@ -39,7 +39,6 @@ class SystemConfig(Resource):
                   'units': units
               }]
           return {"name": "TouchPi", "units": "c"}
-     #{'config': marshal(system_config[0], config_fields)}
 
 class TemperatureSensorList(Resource):
 
@@ -47,7 +46,8 @@ class TemperatureSensorList(Resource):
         super(TemperatureSensorList, self).__init__()
 
     def get(self):
-        return {'sensors': [marshal(temperatureSensor, sensor_fields) for temperatureSensor in sensors]}
+        return [marshal(temperatureSensor, sensor_fields) for temperatureSensor in sensors]
+
 
 class TemperatureSensor(Resource):
 
