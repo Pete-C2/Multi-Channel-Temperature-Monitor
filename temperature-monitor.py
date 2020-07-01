@@ -14,31 +14,16 @@ import csv
 import RPi.GPIO as GPIO
 from max31855 import MAX31855, MAX31855Error
 
-config_fields = {
-    'name': fields.String,
-    'units': fields.String
-}
-
 sensor_fields = {
     'name': fields.String,
     'uri': fields.Url('temperature_sensor')
-}
-
-measurement_fields = {
-     'temperature': fields.String,
-     'age' : fields.String
 }
 
 class SystemConfig(Resource):
      def __init__(self):
           super(SystemConfig, self).__init__()
      def get(self):
-          system_config = [
-              {
-                  'name': title,
-                  'units': units
-              }]
-          return {"name": "TouchPi", "units": "c"}
+          return {"name": title, "units": units}
 
 class TemperatureSensorList(Resource):
 
@@ -47,7 +32,6 @@ class TemperatureSensorList(Resource):
 
     def get(self):
         return [marshal(temperatureSensor, sensor_fields) for temperatureSensor in sensors]
-
 
 class TemperatureSensor(Resource):
 
@@ -59,7 +43,7 @@ class TemperatureSensor(Resource):
           if len(sensor) == 0:
                abort(404)
                
-          return {'sensor': marshal(sensor[0], measurement_fields)}
+          return {'temperature': sensor[0]['temperature'], 'age': sensor[0]['age']}
 
 
 # Sensor measurements

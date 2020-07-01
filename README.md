@@ -28,6 +28,9 @@ See wiki.
 
 ## Changelog
 
+### V2.0.4
+Simplified the REST sensor measurement
+
 ### V2.0.3
 Simplified the REST sensors config
 
